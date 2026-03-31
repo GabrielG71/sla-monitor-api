@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: alert-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/slamonitor}
+    username: ${SPRING_DATASOURCE_USERNAME:sla}
+    password: ${SPRING_DATASOURCE_PASSWORD:sla}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: false   # ingestor-service owns all migrations
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: alert-dispatchers
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.slamonitor.*"
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+
+  mail:
+    host: ${NOTIFICATION_SMTP_HOST:localhost}
+    port: ${NOTIFICATION_SMTP_PORT:25}
+    username: ${NOTIFICATION_SMTP_USER:}
+    password: ${NOTIFICATION_SMTP_PASS:}
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+alert:
+  throttle:
+    default-window-secs: ${ALERT_THROTTLE_DEFAULT_WINDOW_SECS:300}
+
+notification:
+  slack:
+    webhook-url: ${NOTIFICATION_SLACK_WEBHOOK_URL:}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  jpa:
+    show-sql: false

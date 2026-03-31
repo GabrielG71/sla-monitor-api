@@ -1,0 +1,53 @@
+# docker-compose.override.yml — dev overrides
+# Applied automatically when running `docker compose up` locally.
+# NOT committed with production settings — see .env.example for required vars.
+
+version: "3.9"
+
+services:
+
+  ingestor-service:
+    # Bind-mount source so the container reflects local code changes without rebuild
+    volumes:
+      - ../services/ingestor-service:/app
+      - maven_cache:/root/.m2
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    ports:
+      - "8081:8080"
+      - "5005:5005"   # remote debug
+
+  sla-processor:
+    volumes:
+      - ../services/sla-processor:/app
+      - maven_cache:/root/.m2
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006"
+    ports:
+      - "8082:8080"
+      - "5006:5006"   # remote debug
+
+  alert-service:
+    volumes:
+      - ../services/alert-service:/app
+      - maven_cache:/root/.m2
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5007"
+    ports:
+      - "8083:8080"
+      - "5007:5007"   # remote debug
+
+  frontend:
+    # Next.js hot reload
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      NODE_ENV: development
+
+volumes:
+  maven_cache:

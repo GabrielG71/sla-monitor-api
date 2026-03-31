@@ -1,0 +1,128 @@
+# Architecture
+
+## Overview
+
+SLA Monitor is a **monorepo** with three Spring Boot microservices, a Next.js frontend, and shared infrastructure managed via Docker Compose.
+
+## Monorepo Layout
+
+```
+sla-monitor/
+├── services/
+│   ├── ingestor-service/       # Polling scheduler + Kafka producer (port 8081)
+│   ├── sla-processor/          # SLA rule evaluator (Kafka consumer, port 8082)
+│   └── alert-service/          # Alert dispatch + SSE endpoint (port 8083)
+├── frontend/                   # Next.js 14 dashboard (port 3000)
+├── infra/
+│   ├── docker-compose.yml
+│   ├── docker-compose.override.yml   # dev overrides
+│   └── kafka/
+│       └── init-topics.sh
+├── db/
+│   └── migrations/             # Flyway SQL migrations (shared reference)
+├── memory/                     # Agent memory files (this directory)
+└── CLAUDE.md
+```
+
+## Tech Stack
+
+### Backend
+- **Language**: Java 21
+- **Framework**: Spring Boot 3.x
+- **Messaging**: Apache Kafka (Confluent Platform 7.6)
+- **Database**: PostgreSQL 16 + Flyway migrations
+- **Cache / Throttling**: Redis 7
+- **HTTP Client**: Spring WebClient (reactive, non-blocking)
+- **Build**: Maven (per service)
+
+### Frontend
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Real-time**: SSE (Server-Sent Events)
+- **Styling**: Tailwind CSS
+
+### Infrastructure
+- Docker + Compose (local dev)
+- Kafka UI (dev only, port 8090)
+- Zookeeper (Kafka coordination)
+
+## Service Responsibilities
+
+### ingestor-service
+- Loads active endpoints from PostgreSQL on startup, caches in Redis
+- Polls endpoints on configured intervals via `@Scheduled` + WebClient
+- Measures latency (wall-clock), HTTP status, optional response body
+- Publishes to topic `raw-checks` keyed by `endpointId`
+- Redis `SET NX EX` lock prevents overlapping polls per endpoint
+- REST API for endpoint CRUD + manual trigger
+
+### sla-processor
+- Consumes `raw-checks` (group: `sla-processors`)
+- Evaluates three rule types: AVAILABILITY, LATENCY_P95, ERROR_RATE
+- SLA rules cached via Caffeine + Redis Pub/Sub invalidation
+- Publishes to `sla-ok` or `sla-violations`
+- Malformed events → `raw-checks.DLT`
+- Persists aggregated metrics to PostgreSQL
+
+### alert-service
+- Consumes `sla-violations` (group: `alert-dispatchers`)
+- Deduplicates/throttles via Redis (`alert-throttle:{ruleId}`)
+- Dispatches: Webhook, Email (SMTP), Slack (Incoming Webhook)
+- Alert state machine: `OPEN → ACKNOWLEDGED → RESOLVED`
+- SSE endpoint `GET /alerts/stream` for frontend
+- Auto-resolves on subsequent passing checks
+
+## Kafka Topology
+
+```
+raw-checks (6 partitions, key: endpointId)
+  └── sla-processor (group: sla-processors)
+        ├── sla-ok (3 partitions)
+        └── sla-violations (3 partitions)
+              └── alert-service (group: alert-dispatchers)
+
+raw-checks.DLT (1 partition) — dead letter topic
+```
+
+**Partitioning by `endpointId`**: ensures all checks for an endpoint land on the same partition, required for stateful window-based evaluation.
+
+## Module Structure (per service)
+
+```
+{service}/src/main/java/com/slamonitor/{service}/
+├── domain/
+│   ├── model/          # Pure domain entities (no framework deps)
+│   ├── service/        # Domain logic (SlaEvaluator, AlertThrottler)
+│   └── port/           # Outbound port interfaces
+├── application/
+│   └── usecase/        # Orchestration (EvaluateCheckUseCase, DispatchAlertUseCase)
+├── infrastructure/
+│   ├── kafka/          # Consumers, Producers, DLT handlers
+│   ├── persistence/    # JPA Repositories, entity mappers
+│   ├── cache/          # Redis adapters
+│   ├── http/           # WebClient config, polling execution
+│   └── notification/   # Webhook, email, Slack dispatchers
+└── config/             # Spring beans, Kafka config, Redis config
+```
+
+## Redis Usage
+
+| Use Case               | Structure     | Key Pattern                  | TTL            |
+|------------------------|---------------|------------------------------|----------------|
+| Poll dedup lock        | SET NX EX     | `poll-lock:{endpointId}`     | interval_secs  |
+| Endpoint config cache  | STRING (JSON) | `endpoint:{endpointId}`      | 5 min          |
+| SLA rules cache        | STRING (JSON) | `rules:{endpointId}`         | 5 min          |
+| Cache invalidation     | Pub/Sub       | channel: `cache:invalidate`  | —              |
+| Alert throttling       | SET NX EX     | `alert-throttle:{ruleId}`    | configurable   |
+| API key lookup         | HASH          | `apikey:{hash}`              | no TTL         |
+| Latency window buffer  | ZSET          | `latency:{endpointId}`       | window_seconds |
+
+## Database Schema (Flyway migrations)
+
+- **V1** — `services` table (API key auth)
+- **V2** — `endpoints` table (URL, method, headers, timeout, interval)
+- **V3** — `sla_rules` table (type, threshold, window, severity)
+- **V4** — `checks` table (raw poll results, indexed by endpoint+time)
+- **V5** — `alerts` table (state machine, indexed by endpoint+status)
+
+All IDs are UUID generated by PostgreSQL (`gen_random_uuid()`). All timestamps are `TIMESTAMPTZ` / Java `Instant`.
