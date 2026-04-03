@@ -20,7 +20,7 @@ _None yet._
 ### 1. Overlapping polls on slow endpoints
 - **Risk**: If an endpoint response takes longer than its polling interval, the next poll fires before the previous one finishes.
 - **Mitigation**: Redis `SET NX EX` lock (`poll-lock:{endpointId}`) with TTL = interval_secs skips the next poll if the previous is still running.
-- **Status**: Designed, not yet implemented.
+- **Status**: Implemented in `PollLockRedisAdapter` + `PollEndpointUseCase`.
 
 ### 2. Stateful window evaluation across sla-processor replicas
 - **Risk**: Rolling window (p95 latency, error rate) calculated in-memory would be inconsistent across multiple processor instances.

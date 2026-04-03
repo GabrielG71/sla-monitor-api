@@ -7,7 +7,7 @@
 - [x] Flyway migrations V1–V5 (services, endpoints, sla_rules, checks, alerts)
 - [x] Next.js frontend scaffolded (create-next-app — TypeScript, Tailwind, App Router)
 - [x] `ingestor-service`: endpoint registration API (POST/PUT/DELETE /endpoints + GET list/by-id)
-- [ ] `ingestor-service`: HTTP polling scheduler with WebClient
+- [x] `ingestor-service`: HTTP polling scheduler with WebClient
 - [ ] `sla-processor`: basic AVAILABILITY rule evaluation
 - [ ] `alert-service`: alert persistence + webhook dispatch
 - [ ] Next.js dashboard: endpoint list + current status
@@ -33,5 +33,5 @@
 
 ## Current Status
 
-**Phase**: v1 in progress — endpoint registration API implemented, polling scheduler next.
-**Next step**: Implement `ingestor-service` HTTP polling scheduler (`@Scheduled` + WebClient + Kafka producer).
+**Phase**: v1 in progress — ingestor-service complete, sla-processor next.
+**Next step**: Implement `sla-processor` — Kafka consumer + basic AVAILABILITY rule evaluation.

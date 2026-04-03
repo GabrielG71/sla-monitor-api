@@ -47,6 +47,7 @@ polling:
   default-interval-secs: ${POLLING_DEFAULT_INTERVAL_SECS:60}
   default-timeout-ms: ${POLLING_DEFAULT_TIMEOUT_MS:5000}
   max-concurrent: ${POLLING_MAX_CONCURRENT:50}
+  scheduler-tick-ms: ${POLLING_SCHEDULER_TICK_MS:10000}
 
 ---
 spring:
