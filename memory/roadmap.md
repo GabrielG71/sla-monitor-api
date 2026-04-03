@@ -13,10 +13,10 @@
 - [x] Next.js dashboard: endpoint list + current status
 
 ## v2 — SLA Depth
-- [ ] `sla-processor`: LATENCY_P95 and ERROR_RATE rule types
-- [ ] Rolling window metrics with Redis ZSET
-- [ ] Alert state machine (OPEN → ACKNOWLEDGED → RESOLVED) in alert-service
-- [ ] SSE live alert feed on frontend (`/alerts/stream`)
+- [x] `sla-processor`: LATENCY_P95 and ERROR_RATE rule types
+- [x] Rolling window metrics with Redis ZSET
+- [x] Alert state machine (OPEN → ACKNOWLEDGED → RESOLVED) in alert-service
+- [x] SSE live alert feed on frontend (`/alerts/stream`)
 
 ## v3 — Reporting
 - [ ] Monthly SLA compliance report (contractual vs measured)
@@ -33,5 +33,5 @@
 
 ## Current Status
 
-**Phase**: v1 complete — all three backend services + Next.js dashboard implemented.
-**Next step**: v2 — LATENCY_P95/ERROR_RATE rules, Redis ZSET rolling windows, alert state machine, SSE live feed.
+**Phase**: v2 complete — LATENCY/ERROR_RATE evaluators, Redis ZSET rolling windows, SSE live alert feed.
+**Next step**: v3 — monthly SLA compliance report, incident timeline, CSV/PDF export.
