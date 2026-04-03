@@ -2,7 +2,10 @@
 
 ## Open Issues
 
-_None yet — project is in scaffolding phase._
+### 5. Lazy-loading `service` in `EndpointResponse`
+- **Risk**: `EndpointResponse.from(endpoint)` calls `endpoint.getService().getId()`, which triggers a lazy load. Must be called within an open JPA session (inside a `@Transactional` context or within the request scope with `open-in-view: false`).
+- **Mitigation**: All write paths go through use cases annotated with `@Transactional`. Read paths in the controller use `endpointRepository.findById()` which loads the full entity — the lazy load fires within the same JPA session opened by the Spring Data proxy. No action needed now, but watch if this causes `LazyInitializationException` during integration testing.
+- **Status**: Observed during implementation, not yet tested.
 
 ---
 
