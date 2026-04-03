@@ -19,9 +19,9 @@
 - [x] SSE live alert feed on frontend (`/alerts/stream`)
 
 ## v3 — Reporting
-- [ ] Monthly SLA compliance report (contractual vs measured)
-- [ ] Incident timeline (degradation start → resolution)
-- [ ] CSV/PDF export
+- [x] Monthly SLA compliance report (contractual vs measured)
+- [x] Incident timeline (degradation start → resolution)
+- [x] CSV export (PDF deferred — no library dependency justified yet)
 
 ## v4 — Operational
 - [ ] DLT consumer + dead letter inspection UI
@@ -33,5 +33,5 @@
 
 ## Current Status
 
-**Phase**: v2 complete — LATENCY/ERROR_RATE evaluators, Redis ZSET rolling windows, SSE live alert feed.
-**Next step**: v3 — monthly SLA compliance report, incident timeline, CSV/PDF export.
+**Phase**: v3 complete — SLA compliance report (AVAILABILITY/LATENCY/ERROR_RATE × endpoint), incident timeline, CSV export.
+**Next step**: v4 — DLT consumer UI, per-endpoint polling health, Slack + Email notifications.
