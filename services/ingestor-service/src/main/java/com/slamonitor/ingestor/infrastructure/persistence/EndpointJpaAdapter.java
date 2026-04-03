@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
+@SuppressWarnings("null")
 public class EndpointJpaAdapter implements EndpointRepository {
 
     private final SpringEndpointJpaRepository jpa;
