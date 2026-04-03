@@ -3,6 +3,7 @@ package com.slamonitor.alert.application.usecase;
 import com.slamonitor.alert.domain.model.Alert;
 import com.slamonitor.alert.domain.model.SlaViolation;
 import com.slamonitor.alert.domain.port.AlertRepository;
+import com.slamonitor.alert.domain.port.AlertStreamPublisher;
 import com.slamonitor.alert.domain.port.AlertThrottleRepository;
 import com.slamonitor.alert.domain.port.WebhookDispatcher;
 import org.slf4j.Logger;
@@ -19,16 +20,19 @@ public class DispatchAlertUseCase {
     private final AlertRepository alertRepository;
     private final AlertThrottleRepository throttleRepository;
     private final WebhookDispatcher webhookDispatcher;
+    private final AlertStreamPublisher streamPublisher;
 
     @Value("${alert.throttle.default-window-secs:300}")
     private int throttleWindowSecs;
 
     public DispatchAlertUseCase(AlertRepository alertRepository,
                                 AlertThrottleRepository throttleRepository,
-                                WebhookDispatcher webhookDispatcher) {
+                                WebhookDispatcher webhookDispatcher,
+                                AlertStreamPublisher streamPublisher) {
         this.alertRepository = alertRepository;
         this.throttleRepository = throttleRepository;
         this.webhookDispatcher = webhookDispatcher;
+        this.streamPublisher = streamPublisher;
     }
 
     @Transactional
@@ -38,9 +42,10 @@ public class DispatchAlertUseCase {
         if (throttleRepository.tryAcquire(violation.ruleId(), throttleWindowSecs)) {
             webhookDispatcher.dispatch(alert);
         } else {
-            log.debug("Alert for rule {} throttled — suppressing dispatch", violation.ruleId());
+            log.debug("Alert for rule {} throttled — suppressing webhook dispatch", violation.ruleId());
         }
 
+        streamPublisher.publish(alert);
         return alert;
     }
 }

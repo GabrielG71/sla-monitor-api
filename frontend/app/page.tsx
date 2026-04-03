@@ -1,4 +1,5 @@
 import { fetchEndpoints, fetchAlerts, type Alert } from './lib/api'
+import AlertStream from './components/AlertStream'
 
 function severityClass(severity: string): string {
   switch (severity) {
@@ -67,6 +68,9 @@ export default async function DashboardPage() {
             </p>
           </div>
         </div>
+
+        {/* Live alert stream */}
+        <AlertStream />
 
         {/* Endpoints table */}
         <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
