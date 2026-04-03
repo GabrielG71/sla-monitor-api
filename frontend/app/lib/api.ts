@@ -37,6 +37,47 @@ export async function fetchEndpoints(): Promise<Endpoint[]> {
   }
 }
 
+export interface RuleCompliance {
+  ruleId: string
+  ruleType: string
+  slaTarget: number | null
+  thresholdValue: number
+  thresholdUnit: string
+  measuredValue: number
+  measuredUnit: string
+  compliant: boolean
+  incidentCount: number
+  downtimeMinutes: number
+}
+
+export interface EndpointSlaReport {
+  endpointId: string
+  url: string
+  totalChecks: number
+  successfulChecks: number
+  availabilityPct: number
+  rules: RuleCompliance[]
+}
+
+export interface SlaReport {
+  month: string
+  generatedAt: string
+  endpoints: EndpointSlaReport[]
+}
+
+export async function fetchSlaReport(month?: string): Promise<SlaReport | null> {
+  try {
+    const url = month
+      ? `${ALERT_URL}/reports/sla?month=${month}`
+      : `${ALERT_URL}/reports/sla`
+    const res = await fetch(url, { next: { revalidate: 60 } })
+    if (!res.ok) return null
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
 export async function fetchAlerts(status?: string): Promise<Alert[]> {
   try {
     const url = status

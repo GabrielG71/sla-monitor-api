@@ -5,6 +5,7 @@ import com.slamonitor.alert.domain.model.AlertStatus;
 import com.slamonitor.alert.domain.port.AlertRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,5 +38,15 @@ public class AlertJpaAdapter implements AlertRepository {
     @Override
     public List<Alert> findByStatus(AlertStatus status) {
         return jpa.findByStatus(status);
+    }
+
+    @Override
+    public List<Alert> findByTriggeredAtBetween(Instant from, Instant to) {
+        return jpa.findByTriggeredAtBetween(from, to);
+    }
+
+    @Override
+    public List<Alert> findByEndpointIdAndTriggeredAtBetween(UUID endpointId, Instant from, Instant to) {
+        return jpa.findByEndpointIdAndTriggeredAtBetween(endpointId, from, to);
     }
 }
