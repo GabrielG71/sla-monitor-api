@@ -10,7 +10,7 @@
 - [x] `ingestor-service`: HTTP polling scheduler with WebClient
 - [x] `sla-processor`: basic AVAILABILITY rule evaluation
 - [x] `alert-service`: alert persistence + webhook dispatch
-- [ ] Next.js dashboard: endpoint list + current status
+- [x] Next.js dashboard: endpoint list + current status
 
 ## v2 — SLA Depth
 - [ ] `sla-processor`: LATENCY_P95 and ERROR_RATE rule types
@@ -33,5 +33,5 @@
 
 ## Current Status
 
-**Phase**: v1 backend complete — all three services implemented. Frontend next.
-**Next step**: Implement Next.js dashboard — endpoint list + current status page.
+**Phase**: v1 complete — all three backend services + Next.js dashboard implemented.
+**Next step**: v2 — LATENCY_P95/ERROR_RATE rules, Redis ZSET rolling windows, alert state machine, SSE live feed.
