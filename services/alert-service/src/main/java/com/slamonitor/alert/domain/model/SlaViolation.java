@@ -13,5 +13,6 @@ public record SlaViolation(
         String ruleType,
         String severity,
         Instant triggeredAt,
-        String detail
+        String detail,
+        int windowSeconds
 ) {}

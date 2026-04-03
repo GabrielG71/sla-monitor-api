@@ -9,7 +9,8 @@ public record SlaViolation(
         String ruleType,
         String severity,
         Instant triggeredAt,
-        String detail
+        String detail,
+        int windowSeconds
 ) {
     public static SlaViolation forAvailability(SlaRule rule, CheckResult check, int consecutiveFailures) {
         return new SlaViolation(
@@ -19,7 +20,8 @@ public record SlaViolation(
                 rule.getSeverity().name(),
                 check.checkedAt(),
                 consecutiveFailures + " consecutive failures (threshold: "
-                        + rule.getThresholdValue().intValue() + ")"
+                        + rule.getThresholdValue().intValue() + ")",
+                rule.getWindowSeconds()
         );
     }
 
@@ -31,7 +33,8 @@ public record SlaViolation(
                 rule.getSeverity().name(),
                 check.checkedAt(),
                 "p95 latency " + (long) p95 + "ms exceeds threshold "
-                        + rule.getThresholdValue().longValue() + "ms"
+                        + rule.getThresholdValue().longValue() + "ms",
+                rule.getWindowSeconds()
         );
     }
 
@@ -43,7 +46,8 @@ public record SlaViolation(
                 rule.getSeverity().name(),
                 check.checkedAt(),
                 String.format("error rate %.1f%% exceeds threshold %s%%",
-                        errorRate, rule.getThresholdValue().toPlainString())
+                        errorRate, rule.getThresholdValue().toPlainString()),
+                rule.getWindowSeconds()
         );
     }
 }

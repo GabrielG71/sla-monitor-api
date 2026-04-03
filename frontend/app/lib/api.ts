@@ -1,5 +1,6 @@
 const INGESTOR_URL = process.env.INGESTOR_URL ?? 'http://localhost:8081'
-const ALERT_URL = process.env.ALERT_URL ?? 'http://localhost:8083'
+const ALERT_URL    = process.env.ALERT_URL    ?? 'http://localhost:8083'
+const PROCESSOR_URL = process.env.PROCESSOR_URL ?? 'http://localhost:8082'
 
 export interface Endpoint {
   id: string
@@ -63,6 +64,49 @@ export interface SlaReport {
   month: string
   generatedAt: string
   endpoints: EndpointSlaReport[]
+}
+
+export interface PollHealth {
+  endpointId: string
+  checkedAt: string
+  success: boolean
+  statusCode: number | null
+  latencyMs: number | null
+}
+
+export interface DeadLetter {
+  id: string
+  topic: string
+  partitionN: number
+  offsetN: number
+  failedAt: string
+  errorClass: string | null
+  errorMsg: string | null
+  payload: string | null
+}
+
+export async function fetchPollHealth(endpointId: string): Promise<PollHealth | null> {
+  try {
+    const res = await fetch(`${INGESTOR_URL}/endpoints/${endpointId}/health`, {
+      next: { revalidate: 15 },
+    })
+    if (res.status === 204 || !res.ok) return null
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchDeadLetters(limit = 50): Promise<DeadLetter[]> {
+  try {
+    const res = await fetch(`${PROCESSOR_URL}/dead-letters?limit=${limit}`, {
+      next: { revalidate: 30 },
+    })
+    if (!res.ok) return []
+    return res.json()
+  } catch {
+    return []
+  }
 }
 
 export async function fetchSlaReport(month?: string): Promise<SlaReport | null> {

@@ -58,6 +58,9 @@ notification:
     url: ${NOTIFICATION_WEBHOOK_URL:}
   slack:
     webhook-url: ${NOTIFICATION_SLACK_WEBHOOK_URL:}
+  email:
+    to: ${NOTIFICATION_EMAIL_TO:}
+    from: ${NOTIFICATION_EMAIL_FROM:sla-monitor@localhost}
 
 ---
 spring:

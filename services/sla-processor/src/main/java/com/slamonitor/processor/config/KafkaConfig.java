@@ -3,6 +3,7 @@ package com.slamonitor.processor.config;
 import com.slamonitor.processor.domain.model.CheckResult;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,6 +60,25 @@ public class KafkaConfig {
         var factory = new ConcurrentKafkaListenerContainerFactory<String, CheckResult>();
         factory.setConsumerFactory(consumerFactory);
         factory.setCommonErrorHandler(errorHandler);
+        return factory;
+    }
+
+    /**
+     * Separate listener factory for the Dead Letter Topic.
+     * Uses StringDeserializer — we persist the raw payload as text for inspection.
+     */
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> dltListenerContainerFactory() {
+        var consumerFactory = new DefaultKafkaConsumerFactory<String, String>(
+                Map.of(
+                        ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers,
+                        ConsumerConfig.GROUP_ID_CONFIG, "dlt-inspector",
+                        ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest",
+                        ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class
+                ));
+        var factory = new ConcurrentKafkaListenerContainerFactory<String, String>();
+        factory.setConsumerFactory(consumerFactory);
         return factory;
     }
 }

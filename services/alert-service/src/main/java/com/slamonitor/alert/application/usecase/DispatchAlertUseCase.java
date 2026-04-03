@@ -5,12 +5,14 @@ import com.slamonitor.alert.domain.model.SlaViolation;
 import com.slamonitor.alert.domain.port.AlertRepository;
 import com.slamonitor.alert.domain.port.AlertStreamPublisher;
 import com.slamonitor.alert.domain.port.AlertThrottleRepository;
-import com.slamonitor.alert.domain.port.WebhookDispatcher;
+import com.slamonitor.alert.domain.port.NotificationDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Component
 public class DispatchAlertUseCase {
@@ -19,30 +21,37 @@ public class DispatchAlertUseCase {
 
     private final AlertRepository alertRepository;
     private final AlertThrottleRepository throttleRepository;
-    private final WebhookDispatcher webhookDispatcher;
     private final AlertStreamPublisher streamPublisher;
+    private final List<NotificationDispatcher> dispatchers;
 
     @Value("${alert.throttle.default-window-secs:300}")
-    private int throttleWindowSecs;
+    private int defaultThrottleWindowSecs;
 
     public DispatchAlertUseCase(AlertRepository alertRepository,
                                 AlertThrottleRepository throttleRepository,
-                                WebhookDispatcher webhookDispatcher,
-                                AlertStreamPublisher streamPublisher) {
+                                AlertStreamPublisher streamPublisher,
+                                List<NotificationDispatcher> dispatchers) {
         this.alertRepository = alertRepository;
         this.throttleRepository = throttleRepository;
-        this.webhookDispatcher = webhookDispatcher;
         this.streamPublisher = streamPublisher;
+        this.dispatchers = dispatchers;
     }
 
     @Transactional
     public Alert execute(SlaViolation violation) {
         var alert = alertRepository.save(Alert.open(violation));
 
-        if (throttleRepository.tryAcquire(violation.ruleId(), throttleWindowSecs)) {
-            webhookDispatcher.dispatch(alert);
+        int throttleWindow = violation.windowSeconds() > 0
+                ? violation.windowSeconds()
+                : defaultThrottleWindowSecs;
+
+        if (throttleRepository.tryAcquire(violation.ruleId(), throttleWindow)) {
+            dispatchers.stream()
+                    .filter(NotificationDispatcher::isEnabled)
+                    .forEach(d -> d.dispatch(alert));
         } else {
-            log.debug("Alert for rule {} throttled — suppressing webhook dispatch", violation.ruleId());
+            log.debug("Alert for rule {} throttled — suppressing notifications (window={}s)",
+                    violation.ruleId(), throttleWindow);
         }
 
         streamPublisher.publish(alert);

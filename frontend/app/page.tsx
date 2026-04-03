@@ -1,4 +1,4 @@
-import { fetchEndpoints, fetchAlerts, type Alert } from './lib/api'
+import { fetchEndpoints, fetchAlerts, fetchPollHealth, type Alert, type PollHealth } from './lib/api'
 import AlertStream from './components/AlertStream'
 
 function severityClass(severity: string): string {
@@ -24,6 +24,34 @@ function AlertBadge({ alerts }: { alerts: Alert[] }) {
   )
 }
 
+function HealthBadge({ health }: { health: PollHealth | null }) {
+  if (!health) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs text-zinc-400">
+        <span className="h-1.5 w-1.5 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+        Unknown
+      </span>
+    )
+  }
+  const ago = Math.round((Date.now() - new Date(health.checkedAt).getTime()) / 1000)
+  const agoLabel = ago < 60 ? `${ago}s ago` : `${Math.round(ago / 60)}m ago`
+
+  if (health.success) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+        {health.latencyMs != null ? `${health.latencyMs}ms` : 'OK'} · {agoLabel}
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400">
+      <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+      {health.statusCode ?? 'Error'} · {agoLabel}
+    </span>
+  )
+}
+
 export default async function DashboardPage() {
   const [endpoints, openAlerts] = await Promise.all([
     fetchEndpoints(),
@@ -37,6 +65,13 @@ export default async function DashboardPage() {
     alertsByEndpoint.set(alert.endpointId, list)
   }
 
+  const healthResults = await Promise.all(
+    endpoints.map(e => fetchPollHealth(e.id))
+  )
+  const healthById = new Map<string, PollHealth | null>(
+    endpoints.map((e, i) => [e.id, healthResults[i]])
+  )
+
   const activeCount = endpoints.filter(e => e.active).length
 
   return (
@@ -49,12 +84,20 @@ export default async function DashboardPage() {
             <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">SLA Monitor</h1>
             <p className="mt-1 text-sm text-zinc-500">Endpoint availability and performance dashboard</p>
           </div>
-          <a
-            href="/reports"
-            className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
-          >
-            SLA Reports
-          </a>
+          <div className="flex gap-3">
+            <a
+              href="/dead-letters"
+              className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+            >
+              Dead Letters
+            </a>
+            <a
+              href="/reports"
+              className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+            >
+              SLA Reports
+            </a>
+          </div>
         </div>
 
         {/* Stats */}
@@ -95,7 +138,7 @@ export default async function DashboardPage() {
                   <th className="px-5 py-3 font-medium">URL</th>
                   <th className="px-5 py-3 font-medium">Method</th>
                   <th className="px-5 py-3 font-medium">Interval</th>
-                  <th className="px-5 py-3 font-medium">Timeout</th>
+                  <th className="px-5 py-3 font-medium">Last poll</th>
                   <th className="px-5 py-3 font-medium">Status</th>
                   <th className="px-5 py-3 font-medium">Open alerts</th>
                 </tr>
@@ -112,7 +155,9 @@ export default async function DashboardPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3 text-zinc-600 dark:text-zinc-400">{endpoint.intervalSecs}s</td>
-                    <td className="px-5 py-3 text-zinc-600 dark:text-zinc-400">{endpoint.timeoutMs}ms</td>
+                    <td className="px-5 py-3">
+                      <HealthBadge health={healthById.get(endpoint.id) ?? null} />
+                    </td>
                     <td className="px-5 py-3">
                       {endpoint.active ? (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
