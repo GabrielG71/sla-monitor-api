@@ -23,9 +23,9 @@ _None yet._
 - **Status**: Implemented in `PollLockRedisAdapter` + `PollEndpointUseCase`.
 
 ### 2. Stateful window evaluation across sla-processor replicas
-- **Risk**: Rolling window (p95 latency, error rate) calculated in-memory would be inconsistent across multiple processor instances.
-- **Mitigation**: Redis ZSET (`latency:{endpointId}`) provides shared window state across all replicas.
-- **Status**: Designed, not yet implemented.
+- **Risk**: `AvailabilityEvaluator` tracks consecutive failures in a `ConcurrentHashMap` — state is local to one instance. Safe because Kafka partitions by `endpointId` (all checks for an endpoint always hit the same consumer). Will break if replicas > partitions or on rebalance.
+- **Mitigation**: Redis ZSET (`latency:{endpointId}`) for shared window state — planned for v2.
+- **Status**: In-memory version implemented; Redis migration deferred to v2.
 
 ### 3. Kafka consumer group rebalancing during window evaluation
 - **Risk**: Partition reassignment during a rebalance can cause in-progress window calculations to reset or double-count.

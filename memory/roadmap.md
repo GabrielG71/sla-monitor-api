@@ -8,7 +8,7 @@
 - [x] Next.js frontend scaffolded (create-next-app — TypeScript, Tailwind, App Router)
 - [x] `ingestor-service`: endpoint registration API (POST/PUT/DELETE /endpoints + GET list/by-id)
 - [x] `ingestor-service`: HTTP polling scheduler with WebClient
-- [ ] `sla-processor`: basic AVAILABILITY rule evaluation
+- [x] `sla-processor`: basic AVAILABILITY rule evaluation
 - [ ] `alert-service`: alert persistence + webhook dispatch
 - [ ] Next.js dashboard: endpoint list + current status
 
@@ -33,5 +33,5 @@
 
 ## Current Status
 
-**Phase**: v1 in progress — ingestor-service complete, sla-processor next.
-**Next step**: Implement `sla-processor` — Kafka consumer + basic AVAILABILITY rule evaluation.
+**Phase**: v1 in progress — ingestor-service and sla-processor complete, alert-service next.
+**Next step**: Implement `alert-service` — Kafka consumer for sla-violations + alert persistence + webhook dispatch.
