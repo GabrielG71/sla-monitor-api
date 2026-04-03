@@ -9,7 +9,7 @@
 - [x] `ingestor-service`: endpoint registration API (POST/PUT/DELETE /endpoints + GET list/by-id)
 - [x] `ingestor-service`: HTTP polling scheduler with WebClient
 - [x] `sla-processor`: basic AVAILABILITY rule evaluation
-- [ ] `alert-service`: alert persistence + webhook dispatch
+- [x] `alert-service`: alert persistence + webhook dispatch
 - [ ] Next.js dashboard: endpoint list + current status
 
 ## v2 — SLA Depth
@@ -33,5 +33,5 @@
 
 ## Current Status
 
-**Phase**: v1 in progress — ingestor-service and sla-processor complete, alert-service next.
-**Next step**: Implement `alert-service` — Kafka consumer for sla-violations + alert persistence + webhook dispatch.
+**Phase**: v1 backend complete — all three services implemented. Frontend next.
+**Next step**: Implement Next.js dashboard — endpoint list + current status page.

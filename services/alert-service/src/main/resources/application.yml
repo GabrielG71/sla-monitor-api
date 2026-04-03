@@ -54,6 +54,8 @@ alert:
     default-window-secs: ${ALERT_THROTTLE_DEFAULT_WINDOW_SECS:300}
 
 notification:
+  webhook:
+    url: ${NOTIFICATION_WEBHOOK_URL:}
   slack:
     webhook-url: ${NOTIFICATION_SLACK_WEBHOOK_URL:}
 
