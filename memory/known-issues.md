@@ -11,7 +11,10 @@
 
 ## Resolved Issues
 
-_None yet._
+### WebhookDispatcher port replaced by NotificationDispatcher
+- **Context**: v4 refactored single-channel webhook dispatch to multi-channel `List<NotificationDispatcher>`.
+- `WebhookDispatcher` port deleted; `WebhookWebClientDispatcher`, `SlackWebClientDispatcher`, `EmailJavaMailDispatcher` all implement `NotificationDispatcher`.
+- `DispatchAlertUseCase` iterates all enabled dispatchers per alert.
 
 ---
 

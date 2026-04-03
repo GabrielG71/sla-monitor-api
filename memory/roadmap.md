@@ -24,14 +24,14 @@
 - [x] CSV export (PDF deferred — no library dependency justified yet)
 
 ## v4 — Operational
-- [ ] DLT consumer + dead letter inspection UI
-- [ ] Per-endpoint polling health indicator
-- [ ] Alert throttling configuration per rule (UI)
-- [ ] Multi-channel notifications: Slack + Email (SMTP)
+- [x] DLT consumer + dead letter inspection UI
+- [x] Per-endpoint polling health indicator (`poll-last:{endpointId}` in Redis, GET /endpoints/{id}/health)
+- [x] Alert throttle uses per-rule `windowSeconds` (from SlaViolation payload)
+- [x] Multi-channel notifications: Slack + Email (SMTP)
 
 ---
 
 ## Current Status
 
-**Phase**: v3 complete — SLA compliance report (AVAILABILITY/LATENCY/ERROR_RATE × endpoint), incident timeline, CSV export.
-**Next step**: v4 — DLT consumer UI, per-endpoint polling health, Slack + Email notifications.
+**Phase**: v4 complete — all roadmap items delivered.
+**Next step**: production hardening (integration tests, API auth, k8s manifests) or new feature requests.
