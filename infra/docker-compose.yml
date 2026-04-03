@@ -183,7 +183,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://alert-service:8080
+      INGESTOR_URL: http://ingestor-service:8080
+      ALERT_URL: http://alert-service:8080
+      PROCESSOR_URL: http://sla-processor:8080
 
 volumes:
   postgres_data:

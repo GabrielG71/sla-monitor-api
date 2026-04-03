@@ -16,6 +16,11 @@
 - `WebhookDispatcher` port deleted; `WebhookWebClientDispatcher`, `SlackWebClientDispatcher`, `EmailJavaMailDispatcher` all implement `NotificationDispatcher`.
 - `DispatchAlertUseCase` iterates all enabled dispatchers per alert.
 
+### 6. docker-compose frontend env vars missing
+- **Risk**: `frontend` service in `docker-compose.yml` sets `NEXT_PUBLIC_API_URL` which is not used by the Next.js app. The actual vars `INGESTOR_URL`, `ALERT_URL`, `PROCESSOR_URL` are not set, so the app falls back to `localhost` defaults — which are unreachable inside Docker.
+- **Mitigation**: Set the three correct env vars in `infra/docker-compose.yml` pointing to internal service names (`http://ingestor-service:8080`, `http://alert-service:8080`, `http://sla-processor:8080`). Remove the unused `NEXT_PUBLIC_API_URL`.
+- **Status**: Identified. Fix applied in docker-compose.yml.
+
 ---
 
 ## Design Risks / Watch Points
@@ -33,10 +38,10 @@
 
 ### 3. Kafka consumer group rebalancing during window evaluation
 - **Risk**: Partition reassignment during a rebalance can cause in-progress window calculations to reset or double-count.
-- **Mitigation**: Keying by `endpointId` ensures partition affinity. Needs careful handling in consumer offset commit strategy.
-- **Status**: To be addressed during sla-processor implementation.
+- **Mitigation**: Keying by `endpointId` ensures partition affinity. LATENCY/ERROR_RATE windows live in Redis (shared, survives rebalance). AVAILABILITY counter is in-memory — resets on rebalance but single-replica deployment is assumed.
+- **Status**: Theoretical risk, not actively mitigated beyond partition affinity. Acceptable for current scale.
 
 ### 4. Flyway migration ownership across services
 - **Risk**: Three services share the same PostgreSQL database. If two services run migrations simultaneously, conflicts may occur.
-- **Mitigation**: Flyway uses a distributed lock table. Only `ingestor-service` should own migrations V1–V4; `alert-service` owns V5. To be enforced via `spring.flyway.locations` config per service.
-- **Status**: To be designed before first migration run.
+- **Resolution**: `ingestor-service` owns all migrations (V1–V6). `sla-processor` and `alert-service` have `spring.flyway.enabled: false`. Only one service ever runs Flyway.
+- **Status**: Resolved in v1.
