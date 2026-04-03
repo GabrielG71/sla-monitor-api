@@ -1,21 +1,21 @@
-#!/bin/bash
-# Creates all Kafka topics required by SLA Monitor.
-# Runs once as the kafka-init container (see docker-compose.yml).
+#!/bin/sh
 
 set -e
 
 BOOTSTRAP="kafka:9092"
-RF=1   # replication factor — 1 for local dev
+RF=1
 
 echo "Waiting for Kafka to be ready..."
+
 until kafka-topics --bootstrap-server "$BOOTSTRAP" --list > /dev/null 2>&1; do
     sleep 2
 done
+
 echo "Kafka is ready."
 
 create_topic() {
-    local topic=$1
-    local partitions=$2
+    topic=$1
+    partitions=$2
 
     if kafka-topics --bootstrap-server "$BOOTSTRAP" --list | grep -q "^${topic}$"; then
         echo "Topic already exists: $topic"
@@ -25,7 +25,7 @@ create_topic() {
             --topic "$topic" \
             --partitions "$partitions" \
             --replication-factor "$RF"
-        echo "Created topic: $topic (partitions=$partitions)"
+        echo "Created topic: $topic"
     fi
 }
 
