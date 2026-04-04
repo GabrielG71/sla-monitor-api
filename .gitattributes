@@ -13,3 +13,10 @@
 *.sh text eol=lf
 *.sql text eol=lf
 Dockerfile text eol=lf
+*.mjs text eol=lf
+*.env* text eol=lf
+.gitattributes text eol=lf
+.gitignore text eol=lf
+mvnw text eol=lf
+mvnw.cmd text eol=lf
+*.properties text eol=lf
