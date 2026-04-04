@@ -11,6 +11,12 @@
 
 ## Resolved Issues
 
+### Maven parent POM missing repackage goal and -parameters flag
+- **Symptom 1**: Docker containers crashed with `no main manifest attribute, in app.jar`. The parent POM declared `spring-boot-maven-plugin` in `pluginManagement` but without an `<execution>` for the `repackage` goal. Without `spring-boot-starter-parent` as parent, the goal is not inherited automatically — `mvn package` produced a plain JAR with no `Main-Class` in the manifest.
+- **Symptom 2**: `@PathVariable UUID id` endpoints returned 500 with "Name for argument of type [UUID] not specified... Ensure that the compiler uses the '-parameters' flag." Spring MVC resolves parameter names via reflection; without `-parameters`, the JVM omits them.
+- **Fix**: Added `<goal>repackage</goal>` execution and `maven-compiler-plugin` with `<arg>-parameters</arg>` to the root `pom.xml` `pluginManagement` block. Both fixes apply to all three services via inheritance.
+- **Status**: Resolved. Committed in `2076619`.
+
 ### WebhookDispatcher port replaced by NotificationDispatcher
 - **Context**: v4 refactored single-channel webhook dispatch to multi-channel `List<NotificationDispatcher>`.
 - `WebhookDispatcher` port deleted; `WebhookWebClientDispatcher`, `SlackWebClientDispatcher`, `EmailJavaMailDispatcher` all implement `NotificationDispatcher`.

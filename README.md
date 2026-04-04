@@ -6,15 +6,26 @@ A production-ready platform for monitoring the availability and performance of t
 
 ## Screenshots
 
-> Place screenshots in `docs/screenshots/`. Details on what to capture and where are listed at the end of this file.
+**Dashboard — stats overview**
+![Dashboard stats](docs/screenshots/dashboard.png)
 
-| Dashboard | SLA Reports |
-|-----------|-------------|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![SLA Reports](docs/screenshots/reports.png) |
+**Live alert stream — real-time SSE feed**
+![Live alerts](docs/screenshots/live-alerts.png)
 
-| Dead Letters | Live Alert Stream |
-|---|---|
-| ![Dead Letters](docs/screenshots/dead-letters.png) | ![Alert Stream](docs/screenshots/alert-stream.png) |
+**Monitored endpoints — polling health and open alerts**
+![Monitored endpoints](docs/screenshots/monitored-endpoints.png)
+
+**SLA Compliance Report**
+![SLA Reports](docs/screenshots/reports.png)
+
+**CSV export — opened in spreadsheet**
+![CSV export](docs/screenshots/csv-example.png)
+
+**Dead Letters — unprocessable messages from `raw-checks.DLT`**
+![Dead Letters](docs/screenshots/dead-letters.png)
+
+**Kafka UI — topic overview**
+![Kafka UI](docs/screenshots/kafka-ui.png)
 
 ---
 
@@ -474,68 +485,6 @@ docker compose up --build
 ```bash
 cd infra
 docker compose up --build ingestor-service
-```
-
----
-
-## Screenshots Guide
-
-The table at the top of this README references images in `docs/screenshots/`. Create that directory and take the following screenshots after running the full stack with `docker compose up --build` and registering at least two endpoints with SLA rules.
-
-### What to capture
-
-| File | URL | What to show |
-|---|---|---|
-| `dashboard.png` | http://localhost:3000 | Endpoint table with active endpoints, health badges showing latency (e.g. "42ms · 5s ago"), and at least one open alert badge |
-| `alert-stream.png` | http://localhost:3000 | The live alert stream panel with one or more incoming alert cards visible — trigger a violation first if the stream is empty |
-| `reports.png` | http://localhost:3000/reports | SLA compliance table with at least one endpoint showing measured values, incident counts, and compliant/non-compliant badges |
-| `dead-letters.png` | http://localhost:3000/dead-letters | Dead letters panel — either showing "no dead letters" (clean state) or a real DLT entry with its error class and payload |
-
-### Optional but recommended
-
-| File | URL | What to show |
-|---|---|---|
-| `kafka-ui.png` | http://localhost:8090 | Topics view listing `raw-checks`, `sla-ok`, `sla-violations`, and `raw-checks.DLT` with message counts |
-
-### How to trigger data for screenshots
-
-```bash
-# 1. Register a service (replace with real UUIDs as needed)
-curl -s -X POST http://localhost:8081/endpoints \
-  -H "Content-Type: application/json" \
-  -d '{
-    "serviceId": "00000000-0000-0000-0000-000000000001",
-    "url": "https://httpbin.org/status/200",
-    "httpMethod": "GET",
-    "timeoutMs": 3000,
-    "intervalSecs": 15
-  }'
-
-# 2. Register an endpoint that will fail (to trigger alerts)
-curl -s -X POST http://localhost:8081/endpoints \
-  -H "Content-Type: application/json" \
-  -d '{
-    "serviceId": "00000000-0000-0000-0000-000000000001",
-    "url": "https://httpbin.org/status/503",
-    "httpMethod": "GET",
-    "timeoutMs": 3000,
-    "intervalSecs": 15
-  }'
-
-# 3. Wait one polling cycle (~15s), then open the dashboard
-```
-
-### Where to place the files
-
-```
-sla-monitor-api/
-└── docs/
-    └── screenshots/
-        ├── dashboard.png
-        ├── alert-stream.png
-        ├── reports.png
-        ├── dead-letters.png
-        └── kafka-ui.png       (optional)
 ```
 
 ---
